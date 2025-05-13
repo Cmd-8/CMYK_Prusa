@@ -3,7 +3,18 @@ from PIL import Image
 from tkinter import filedialog, messagebox
 import os
 import re
+import sys
 
+
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class GCodeToolSwitcher:
@@ -56,7 +67,8 @@ class GCodeToolSwitcher:
             if current_tool is not None:
                 park_match = self.park_pattern.search(line)
                 if park_match and active_tool == current_tool:
-                    modified_gcode[i] = f"; {line} - skipped parking as T{current_tool} ({self.tool_names[current_tool]}) is already active"
+                    modified_gcode[
+                        i] = f"; {line} - skipped parking as T{current_tool} ({self.tool_names[current_tool]}) is already active"
                     continue
                 pickup_match = self.pickup_pattern.search(line)
                 if pickup_match:
@@ -65,7 +77,8 @@ class GCodeToolSwitcher:
                         modified_gcode[i] = re.sub(r'T\d+', f'T{current_tool}', line)
                         active_tool = current_tool
                     elif active_tool == current_tool:
-                        modified_gcode[i] = f"; {line} - skipped pickup as T{current_tool} ({self.tool_names[current_tool]}) is already active"
+                        modified_gcode[
+                            i] = f"; {line} - skipped pickup as T{current_tool} ({self.tool_names[current_tool]}) is already active"
                         continue
                     else:
                         active_tool = current_tool
@@ -89,7 +102,8 @@ class GCodeToolSwitcher:
                             modified_gcode[i] = new_command
                             active_tool = current_tool
                         else:
-                            modified_gcode[i] = f"; {line} - skipped as T{current_tool} ({self.tool_names[current_tool]}) is already active"
+                            modified_gcode[
+                                i] = f"; {line} - skipped as T{current_tool} ({self.tool_names[current_tool]}) is already active"
                             continue
                 tool_match = self.tool_pattern.search(line)
                 if tool_match:
@@ -117,7 +131,6 @@ class GCodeToolSwitcher:
         with open(output_file, 'w') as f:
             f.write('\n'.join(modified_lines))
         return total_layers, tool_sequence
-
 
 
 class App(ctk.CTk):
@@ -212,7 +225,6 @@ class App(ctk.CTk):
 
         self.log_text = ctk.CTkTextbox(log_frame, height=15, wrap="word")
         self.log_text.pack(fill="both", expand=True, side=ctk.LEFT)
-
 
     def browse_input(self):
         filename = filedialog.askopenfilename(
@@ -358,7 +370,6 @@ class App(ctk.CTk):
         self.color_button.configure(fg_color=mixed_color_hex)
         self.result_label.configure(text=f"CMYK: C={c} M={m} Y={y} K={k}")
 
-
     def create_tabs(self):
         # Add tabs to the tabview
         self.tab1 = self.tabview.add("Welcome")
@@ -374,16 +385,49 @@ class App(ctk.CTk):
         co_star = ctk.CTkLabel(tab, text="Co-Founder Mia")
         co_star.pack()
 
-        # Load and display the image
-        image_path = "images/Mia.png"  # Make sure this path is correct
-        image = Image.open(image_path)
-        ctk_image = ctk.CTkImage(light_image=image, size=(275, 325))
+        # Load and display the image using resource_path
+        image_path = resource_path(os.path.join("images", "Mia.png"))
+        try:
+            image = Image.open(image_path)
+            ctk_image = ctk.CTkImage(light_image=image, size=(275, 325))
+            label = ctk.CTkLabel(tab, image=ctk_image, text="")
+            label.pack(padx=20, pady=20)
+        except Exception as e:
+            error_label = ctk.CTkLabel(tab, text=f"Error loading image: {str(e)}")
+            error_label.pack(padx=20, pady=20)
 
-        label = ctk.CTkLabel(tab, image=ctk_image, text="")
-        label.pack(padx=20, pady=20)
+        intro = ctk.CTkLabel(tab,
+                             text="Welcome! For detailed instructions, please refer to 'How_To.pdf' and also take a look at my report paper."
+                                  " Note that this has only been tested on Windows.")
+        intro_2 = ctk.CTkLabel(tab,
+                             text="The background changes depending on your system default background color like light or dark mode.")
+        intro_3 = ctk.CTkLabel(tab,
+                             text=
+                                  "The background changes depending on your system's default background color, like light or dark mode."
+                                  " You add two colors and weights for the color to show (you can use 0).")
 
-        intro = ctk.CTkLabel(tab, text="Welcome, to view the 3D model output I suggest using G-Code Viewer, bhahahahahahhahaahhaha")
+        intro_4 = ctk.CTkLabel(tab,
+                             text=
+                                  "CMYK can run slowly on large objects."
+                                  " Make sure that the file wasn't exported as binary G-Gode and only runs with Prusa XL")
+        intro_5 = ctk.CTkLabel(tab,
+                             text=
+                                  "Input: Search and upload the G-Code."
+                                  " Output: location of saved file."
+                                  " Tool pattern: Is the color pattern."
+                                  " Process: Switches the tool-head number."
+                                  " Status: Output pattern text.")
+
+        intro_6 = ctk.CTkLabel(tab,
+                             text="Thanks to the Fab Lab for allowing me to test my project."
+                                  " I've been coding for a year, so there’s still room for improvement, and some features—like color change over time still missing.")
         intro.pack()
+        intro_2.pack()
+        intro_3.pack()
+        intro_4.pack()
+        intro_5.pack()
+        intro_6.pack()
+
 
     # Placeholder methods for other tabs
     def tab2_content(self, tab):
@@ -409,9 +453,14 @@ class App(ctk.CTk):
         # Create button to display mixed color
         self.color_button = ctk.CTkButton(tab, text="", fg_color="gray", width=300, height=100)  # Initially gray
         self.color_button.pack(pady=0)
+
+        # Create label for CMYK result
+        self.result_label = ctk.CTkLabel(tab, text="")
+        self.result_label.pack(pady=5)
+
     def tab3_content(self, tab):
         self.create_widgets(tab)
-        #cyml_lay = self.CYMK(tab)
+        # cyml_lay = self.CYMK(tab)
 
 
 class TwoToolApp(App):
@@ -422,7 +471,8 @@ class TwoToolApp(App):
             1: "M104.1 T1 P120 Q121 S210 ; switch to tool 1 (T2)"
         }
         tool_switcher = GCodeToolSwitcher(tool_names, tool_change_commands)
-        super().__init__(tool_switcher, [1, 1], "Prusa XL Tool Switcher", tool_names)
+        super().__init__(tool_switcher, [1, 1], tool_names)
+
 
 # 3-Tool (RGB) Version
 class ThreeToolApp(App):
@@ -434,7 +484,8 @@ class ThreeToolApp(App):
             2: "M104.1 T2 P120 Q123 S210 ; switch to tool 2 (Blue)"
         }
         tool_switcher = GCodeToolSwitcher(tool_names, tool_change_commands)
-        super().__init__(tool_switcher, [1, 1, 1], "Prusa XL RGB Tool Switcher", tool_names)
+        super().__init__(tool_switcher, [1, 1, 1], tool_names)
+
 
 # 4-Tool (CMYK) Version
 class FourToolApp(App):
@@ -447,7 +498,8 @@ class FourToolApp(App):
             3: "M104.1 T3 P120 Q124 S210 ; switch to tool 3 (Black)"
         }
         tool_switcher = GCodeToolSwitcher(tool_names, tool_change_commands)
-        super().__init__(tool_switcher, [1, 1, 1, 1], "Prusa XL CMYK Tool Switcher", tool_names)
+        super().__init__(tool_switcher, [1, 1, 1, 1], tool_names)
+
 
 # 5-Tool Version
 class FiveToolApp(App):
@@ -461,7 +513,7 @@ class FiveToolApp(App):
             4: "M104.1 T4 P120 Q125 S210 ; switch to tool 4 (Black)"
         }
         tool_switcher = GCodeToolSwitcher(tool_names, tool_change_commands)
-        super().__init__(tool_switcher, [2, 0, 1, 0, 0], "Prusa XL 5-Tool Switcher", tool_names)
+        super().__init__(tool_switcher, [2, 0, 1, 0, 0], tool_names)
 
 
 if __name__ == "__main__":
