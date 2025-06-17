@@ -1,6 +1,10 @@
 # CMYK_Prusa
 FOR PRUSA XL PRINTER
 
+UPDATE: I made a short youtube video, I'm going to make another one, and I have been updating my research paper!
+https://youtu.be/KgaIGOQXc9I?si=sb-DJh8n-J3JG-b5
+
+
 I apologize for the delay in completing the research paper. This is one of the most significant projects I’ve undertaken, and it may contain some errors. I've just reached my one-year mark in programming, and programming is half of my major. I will continue to update this until the paper is released, but I may not support afterward as I will be focusing on another major project.
 The photo file contains all the photos of my results. The "How To.pdf" explains the color blending method using both Prusa Slicer and my Python code. The research paper details the results of my experiments with color blending.
 
